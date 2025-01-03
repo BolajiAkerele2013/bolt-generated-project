@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  name          String
+  password      String
+  portfolio     String?
+  skills        String    // Stored as JSON string
+  interests     String    // Stored as JSON string
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  ownedIdeas    Idea[]    @relation("IdeaOwner")
+  equityShares  Equity[]
+  debtShares    Debt[]
+  contracts     Contract[]
+  comments      Comment[]
+  tasks         Task[]
+}
+
+model Idea {
+  id              String    @id @default(uuid())
+  name            String
+  description     String
+  problemCategory String
+  solution        String
+  logo            String?
+  visibility      String    @default("private") // public or private
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  owner           User      @relation("IdeaOwner", fields: [ownerId], references: [id])
+  ownerId         String
+  equityShares    Equity[]
+  debtShares      Debt[]
+  contracts       Contract[]
+  comments        Comment[]
+  tasks           Task[]
+  documents       Document[]
+}
+
+model Equity {
+  id          String    @id @default(uuid())
+  percentage  Float
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id])
+  userId      String
+  idea        Idea      @relation(fields: [ideaId], references: [id])
+  ideaId      String
+}
+
+model Debt {
+  id          String    @id @default(uuid())
+  amount      Float
+  interest    Float
+  term        Int       // in months
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id])
+  userId      String
+  idea        Idea      @relation(fields: [ideaId], references: [id])
+  ideaId      String
+}
+
+model Contract {
+  id          String    @id @default(uuid())
+  role        String
+  startDate   DateTime
+  endDate     DateTime?
+  status      String    // active, completed, terminated
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id])
+  userId      String
+  idea        Idea      @relation(fields: [ideaId], references: [id])
+  ideaId      String
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  title       String
+  description String
+  status      String    // todo, in-progress, completed
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  assignee    User      @relation(fields: [assigneeId], references: [id])
+  assigneeId  String
+  idea        Idea      @relation(fields: [ideaId], references: [id])
+  ideaId      String
+}
+
+model Comment {
+  id          String    @id @default(uuid())
+  content     String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  author      User      @relation(fields: [authorId], references: [id])
+  authorId    String
+  idea        Idea      @relation(fields: [ideaId], references: [id])
+  ideaId      String
+}
+
+model Document {
+  id          String    @id @default(uuid())
+  name        String
+  type        String    // business-plan, financial-forecast, nda, etc.
+  content     String    // Could be a URL or file path
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  idea        Idea      @relation(fields: [ideaId], references: [id])
+  ideaId      String
+}
